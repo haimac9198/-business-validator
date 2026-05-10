@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BizCheck — AI Business Idea Validator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #f0f0f0;
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      padding: 50px 20px 30px;
+    }
+
+    header h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header p {
+      color: #888;
+      margin-top: 10px;
+      font-size: 1.1rem;
+    }
+
+    .container {
+      max-width: 750px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    .input-box {
+      background: #1a1a1a;
+      border: 1px solid #2e2e2e;
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+    }
+
+    textarea {
+      width: 100%;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 10px;
+      color: #f0f0f0;
+      font-size: 1rem;
+      padding: 16px;
+      resize: none;
+      height: 120px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    textarea:focus {
+      border-color: #a78bfa;
+    }
+
+    textarea::placeholder {
+      color: #555;
+    }
+
+    button {
+      margin-top: 16px;
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    button:hover { opacity: 0.9; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #888;
+      display: none;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #2e2e2e;
+      border-top-color: #a78bfa;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .results { display: none; }
+
+    .verdict-banner {
+      border-radius: 16px;
+      padding: 30px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .verdict-banner.strong { background: linear-gradient(135deg, #064e3b, #065f46); border: 1px solid #10b981; }
+    .verdict-banner.needs  { background: linear-gradient(135deg, #451a03, #78350f); border: 1px solid #f59e0b; }
+    .verdict-banner.risk   { background: linear-gradient(135deg, #450a0a, #7f1d1d); border: 1px solid #ef4444; }
+
+    .verdict-label {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .verdict-summary {
+      color: #ccc;
+      font-size: 1rem;
+    }
+
+    .score-bar-wrap {
+      margin-top: 16px;
+    }
+
+    .score-bar-bg {
+      background: rgba(255,255,255,0.1);
+      border-radius: 100px;
+      height: 10px;
+      overflow: hidden;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      transition: width 1s ease;
+    }
+
+    .score-text {
+      margin-top: 6px;
+      font-size: 0.9rem;
+      color: #888;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
+
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #2e2e2e;
+      border-radius: 14px;
+      padding: 22px;
+    }
+
+    .card h3 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #a78bfa;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      color: #ccc;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .steps-card {
+      background: #1a1a1a;
+      border: 1px solid #2e2e2e;
+      border-radius: 14px;
+      padding: 22px;
+    }
+
+    .steps-card h3 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #60a5fa;
+      margin-bottom: 14px;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .step-num {
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step p {
+      color: #ccc;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      padding-top: 3px;
+    }
+
+    .error {
+      background: #1a0a0a;
+      border: 1px solid #ef4444;
+      border-radius: 14px;
+      padding: 20px;
+      color: #fca5a5;
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>BizCheck</h1>
+    <p>Validate your business idea with AI in seconds</p>
+  </header>
+
+  <div class="container">
+
+    <div class="input-box">
+      <textarea id="ideaInput" placeholder="Describe your business idea... e.g. An app that connects local farmers directly to restaurants in their city"></textarea>
+      <button id="validateBtn" onclick="validate()">Analyze My Idea</button>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Analyzing your idea...</p>
+    </div>
+
+    <div class="error" id="error"></div>
+
+    <div class="results" id="results">
+
+      <div class="verdict-banner" id="verdictBanner">
+        <div class="verdict-label" id="verdictLabel"></div>
+        <div class="verdict-summary" id="verdictSummary"></div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-bg">
+            <div class="score-bar-fill" id="scoreBar" style="width: 0%"></div>
+          </div>
+          <div class="score-text" id="scoreText"></div>
+        </div>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <h3>Market Opportunity</h3>
+          <p id="market"></p>
+        </div>
+        <div class="card">
+          <h3>Competition</h3>
+          <p id="competition"></p>
+        </div>
+        <div class="card" style="grid-column: span 2;" id="risksCard">
+          <h3>Risks</h3>
+          <p id="risks"></p>
+        </div>
+      </div>
+
+      <div class="steps-card">
+        <h3>Next Steps</h3>
+        <div id="steps"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    async function validate() {
+      const idea = document.getElementById('ideaInput').value.trim();
+      if (!idea) return;
+
+      document.getElementById('validateBtn').disabled = true;
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('error').style.display = 'none';
+
+      try {
+        const res = await fetch('/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idea }),
+        });
+
+        const data = await res.json();
+
+        if (data.error) throw new Error(data.error);
+
+        // Verdict banner
+        const banner = document.getElementById('verdictBanner');
+        banner.className = 'verdict-banner';
+        if (data.verdict === 'Strong Idea') banner.classList.add('strong');
+        else if (data.verdict === 'Needs Work') banner.classList.add('needs');
+        else banner.classList.add('risk');
+
+        document.getElementById('verdictLabel').textContent = data.verdict;
+        document.getElementById('verdictSummary').textContent = data.summary;
+
+        // Score bar
+        setTimeout(() => {
+          document.getElementById('scoreBar').style.width = (data.score * 10) + '%';
+        }, 100);
+        document.getElementById('scoreText').textContent = `Score: ${data.score} / 10`;
+
+        // Cards
+        document.getElementById('market').textContent = data.market_opportunity;
+        document.getElementById('competition').textContent = data.competition;
+        document.getElementById('risks').textContent = data.risks;
+
+        // Steps
+        const stepsEl = document.getElementById('steps');
+        stepsEl.innerHTML = '';
+        data.next_steps.forEach((step, i) => {
+          stepsEl.innerHTML += `
+            <div class="step">
+              <div class="step-num">${i + 1}</div>
+              <p>${step}</p>
+            </div>`;
+        });
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('results').style.display = 'block';
+
+      } catch (err) {
+        document.getElementById('loading').style.display = 'none';
+        const errEl = document.getElementById('error');
+        errEl.textContent = err.message || 'Something went wrong. Please try again.';
+        errEl.style.display = 'block';
+      }
+
+      document.getElementById('validateBtn').disabled = false;
+    }
+
+    document.getElementById('ideaInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.metaKey) validate();
+    });
+  </script>
+
+</body>
+</html>
